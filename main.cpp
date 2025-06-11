@@ -1,64 +1,46 @@
-#include <iostream>
-#include <vector>
-#include <set>
-using namespace std;
+def print_board(board):
+    for row in board:
+        print(" ".join("Q" if col else "." for col in row))
+    print()
 
-class NQueensSolver {
-public:
-    vector<vector<string>> solveNQueens(int n) {
-        vector<vector<string>> solutions;
-        vector<int> queens(n, -1); // queens[row] = col
-        set<int> columns, diag1, diag2; // for conflict tracking
-        backtrack(0, n, queens, columns, diag1, diag2, solutions);
-        return solutions;
-    }
+def is_safe(board, row, col, n):
+    # Check column
+    for i in range(row):
+        if board[i][col]:
+            return False
 
-private:
-    void backtrack(int row, int n, vector<int>& queens,
-                   set<int>& columns, set<int>& diag1, set<int>& diag2,
-                   vector<vector<string>>& solutions) {
-        if (row == n) {
-            solutions.push_back(buildBoard(queens, n));
-            return;
-        }
-        for (int col = 0; col < n; ++col) {
-            if (columns.count(col) || diag1.count(row - col) || diag2.count(row + col))
-                continue;
+    # Check upper left diagonal
+    for i, j in zip(range(row-1, -1, -1), range(col-1, -1, -1)):
+        if board[i][j]:
+            return False
 
-            queens[row] = col;
-            columns.insert(col);
-            diag1.insert(row - col);
-            diag2.insert(row + col);
+    # Check upper right diagonal
+    for i, j in zip(range(row-1, -1, -1), range(col+1, n)):
+        if board[i][j]:
+            return False
 
-            backtrack(row + 1, n, queens, columns, diag1, diag2, solutions);
+    return True
 
-            // backtrack
-            columns.erase(col);
-            diag1.erase(row - col);
-            diag2.erase(row + col);
-            queens[row] = -1;
-        }
-    }
+def solve_n_queens(board, row, n, solutions):
+    if row == n:
+        solutions.append([row[:] for row in board])
+        return
 
-    vector<string> buildBoard(const vector<int>& queens, int n) {
-        vector<string> board(n, string(n, '.'));
-        for (int i = 0; i < n; ++i) {
-            board[i][queens[i]] = 'Q';
-        }
-        return board;
-    }
-};
+    for col in range(n):
+        if is_safe(board, row, col, n):
+            board[row][col] = 1
+            solve_n_queens(board, row + 1, n, solutions)
+            board[row][col] = 0  # backtrack
 
-int main() {
-    int n = 8;
-    NQueensSolver solver;
-    vector<vector<string>> solutions = solver.solveNQueens(n);
+def n_queens(n):
+    board = [[0 for _ in range(n)] for _ in range(n)]
+    solutions = []
+    solve_n_queens(board, 0, n, solutions)
+    return solutions
 
-    cout << "Total solutions for " << n << "-Queens: " << solutions.size() << "\n";
-    for (const auto& board : solutions) {
-        for (const string& row : board)
-            cout << row << "\n";
-        cout << "-----\n";
-    }
-    return 0;
-}
+# Example usage
+n = 4
+solutions = n_queens(n)
+print(f"Total solutions for {n}-Queens: {len(solutions)}\n")
+for sol in solutions:
+    print_board(sol)
